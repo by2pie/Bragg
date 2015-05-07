@@ -30,7 +30,7 @@ deg2rad = @(deg) pi * deg/180;
 % (3) Rysowanie wykres�w przerobione na cienowane powierzchnie - wydaje si�
 % dzia�a� nieco lepiej, w ka�dym razie jest kolorowo.
 
-%(0) Coś przesuwa się symetrycznie, być może brakuje PML a moze strzelone sa indeksy  
+(0) Coś przesuwa się symetrycznie, być może brakuje PML a moze strzelone sa indeksy  
 
 
 sigma = 0;%1e-5;                    % przewodnosc dla wody
@@ -47,17 +47,18 @@ L = 1;                              % rozmiar pola [metr? milimetr?]
 N_TF_SF = 100;                            % rozmiar TF_SF
 N_SF = 20;                         % rozmiar pola SF
 N = N_TF_SF + 2*N_SF
-interior = false(N,N)
-interior(N_SF+1:N-N_SF,N_SF+1:N-N_SF) = true
+mask_TF_SF = zeros(N,N)
+mask_TF_SF(N_SF+1
 dx = L/N;                           % krok przestrzenny
 dy = L/N;                               
 dt = dx /cc/sqrt(2);                % krok czasowy
 T_end = 1000 ;                      % koniec symulacji
 t = 0;
 
-
-eps(interior) = eps_0 * eps_r
-mu(interior) = mu_0 * mu_r
+mu = ones(N,N) * mu_0
+eps = ones(N,N) * eps_0
+eps(N_SF+1:N-N_SF,N_SF+1:N-N_SF) = eps_0 * eps_r
+mu(N_SF+1:N-N_SF,N_SF+1:N-N_SF) = mu_0 * mu_r
 
 
 Ez = zeros(N,N);                    %notacja nie macierzowa
@@ -65,7 +66,7 @@ Hx= zeros(N,N+1);                   %to znaczy uzywamy (wymiar_poziomy_x, wymiar
 Hy= zeros(N+1,N);
 
 
-E0 = 1;                             % moc �r�d�a     
+E0 = 10;                             % moc �r�d�a     
 m0 = [1,1];                         % po�o�enie �r�d�a - naro�nik SW
 m0_inc = 4;                         % po�o�enia �r�d�a w bazie padaj�cej fali
 inc_angle = 45 ;                    % k�t pod kt�rym pada fala [stopnie]
@@ -188,11 +189,11 @@ while (t < T_end)
     htemp1 = H_inc(end-1);
     
     t = t + dt ;  %update czasu
-
+    
      %TE
-    Eze = (1 - sigma*dt/eps_0)/(1 + sigma*dt/eps_0) * Eze + ...
-        dt/(eps_0*dx)/(1+sigma*dt/(2*eps_0))*(Hye(2:end,:)- Hye(1:end-1,:))+ ...
-        dt/(eps_0*dy)/(1+sigma*dt/(2*eps_0))*(Hxe(:,1:end-1) - Hxe(:,2:end));
+    Eze = (1 - sigma*dt/eps)/(1 + sigma*dt/eps_0) * Eze + ...
+        dt/(eps_0*dx)/(1+sigma*dt/(2*eps))*(Hye(2:end,:)- Hye(1:end-1,:))+ ...
+        dt/(eps_0*dy)/(1+sigma*dt/(2*eps))*(Hxe(:,1:end-1) - Hxe(:,2:end));
     
     Hxe(:,2:end-1) = (1 - sigma*dt/2/mu_0)/(1 + sigma*dt/2/mu_0) * Hxe(:,2:end-1)+...
         (dt/(mu_0*dy))/(1+sigma*dt/(2*mu_0))*(Eze(:,1:end-1) - Eze(:,2:end));
